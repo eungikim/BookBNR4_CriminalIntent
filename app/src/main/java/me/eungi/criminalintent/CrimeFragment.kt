@@ -114,7 +114,16 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks {
     }
 
     override fun onDateSelected(date: Date) {
-        crime.date = date
+        val calendar = Calendar.getInstance()
+        calendar.time = crime.date
+        val preHour = calendar.get(Calendar.HOUR_OF_DAY)
+        val preMinute = calendar.get(Calendar.MINUTE)
+        val preSecond = calendar.get(Calendar.SECOND)
+        calendar.time = date
+        calendar.set(Calendar.HOUR_OF_DAY, preHour)
+        calendar.set(Calendar.MINUTE, preMinute)
+        calendar.set(Calendar.SECOND, preSecond)
+        crime.date = calendar.time
         updateUI()
     }
 }
