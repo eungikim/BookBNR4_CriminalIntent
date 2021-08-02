@@ -16,25 +16,30 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.CheckBox
-import android.widget.CompoundButton
 import android.widget.EditText
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import java.text.SimpleDateFormat
 import java.util.*
 
 private const val TAG = "CrimeFragment"
 private const val ARG_CRIME_ID = "crime_id"
 private const val DIALOG_DATE = "DialogDate"
+private const val DIALOG_TIME = "DialogTime"
 private const val REQUEST_DATE = 0
-private const val REQUEST_CONTACT = 1
-private const val DATE_FORMAT = "yyyy년 M월 d일 H시 m분, E요일"
+private const val REQUEST_TIME = 1
+private const val REQUEST_CONTACT = 2
+private const val DATE_FORMAT = "yyyy-MM-dd"
+private const val TIME_FORMAT = "HH:mm"
+private const val DATE_FORMAT_REPORT = "yyyy년 M월 d일 H시 m분, E요일"
 
-class CrimeFragment: Fragment(), DatePickerFragment.Callbacks {
+class CrimeFragment: Fragment(), DatePickerFragment.Callbacks, TimePickerFragment.Callbacks {
 
     private lateinit var crime: Crime
     private lateinit var titleField: EditText
     private lateinit var dateButton: Button
+    private lateinit var timeButton: Button
     private lateinit var solvedCheckBox: CheckBox
     private lateinit var reportButton: Button
     private lateinit var suspectButton: Button
@@ -59,6 +64,7 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks {
 
         titleField = view.findViewById(R.id.crime_title) as EditText
         dateButton = view.findViewById(R.id.crime_date) as Button
+        timeButton = view.findViewById(R.id.crime_time) as Button
         solvedCheckBox = view.findViewById(R.id.crime_solved) as CheckBox
         reportButton = view.findViewById(R.id.crime_report) as Button
         suspectButton = view.findViewById(R.id.crime_suspect) as Button
@@ -97,6 +103,13 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks {
             DatePickerFragment.newInstance(crime.date).apply {
                 setTargetFragment(this@CrimeFragment, REQUEST_DATE)
                 show(this@CrimeFragment.parentFragmentManager, DIALOG_DATE)
+            }
+        }
+
+        timeButton.setOnClickListener {
+            TimePickerFragment.newInstance(crime.date).apply {
+                setTargetFragment(this@CrimeFragment, REQUEST_TIME)
+                show(this@CrimeFragment.parentFragmentManager, DIALOG_TIME)
             }
         }
 
@@ -158,8 +171,11 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks {
 
 
     private fun updateUI() {
+        val dateFormatter =  SimpleDateFormat(DATE_FORMAT, Locale.KOREA)
+        val timeFormatter =  SimpleDateFormat(TIME_FORMAT, Locale.KOREA)
         titleField.setText(crime.title)
-        dateButton.text = crime.date.toString()
+        dateButton.text = dateFormatter.format(crime.date)
+        timeButton.text = timeFormatter.format(crime.date)
         solvedCheckBox.apply {
             isChecked = crime.isSolved
             jumpDrawablesToCurrentState()
@@ -175,7 +191,7 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks {
         } else {
             getString(R.string.crime_report_unsolved)
         }
-        val dateString = DateFormat.format(DATE_FORMAT, crime.date).toString()
+        val dateString = DateFormat.format(DATE_FORMAT_REPORT, crime.date).toString()
         val suspect = if (crime.suspect.isBlank()) {
             getString(R.string.crime_report_no_suspect)
         } else {
@@ -205,6 +221,20 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks {
         calendar.set(Calendar.HOUR_OF_DAY, preHour)
         calendar.set(Calendar.MINUTE, preMinute)
         calendar.set(Calendar.SECOND, preSecond)
+        crime.date = calendar.time
+        updateUI()
+    }
+
+    override fun onTimeSelected(date: Date) {
+        val calendar = Calendar.getInstance()
+        calendar.time = crime.date
+        val preYear = calendar.get(Calendar.YEAR)
+        val preMonth = calendar.get(Calendar.MONTH)
+        val preDayOfMonth = calendar.get(Calendar.DAY_OF_MONTH)
+        calendar.time = date
+        calendar.set(Calendar.YEAR, preYear)
+        calendar.set(Calendar.MONTH, preMonth)
+        calendar.set(Calendar.DAY_OF_MONTH, preDayOfMonth)
         crime.date = calendar.time
         updateUI()
     }
