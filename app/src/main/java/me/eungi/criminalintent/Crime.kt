@@ -11,5 +11,6 @@ data class Crime(
     var title: String = "",
     var date: Date = Date(),
     var isSolved: Boolean = false,
-    val callPolice: Boolean = Random.nextInt(10) < 3
+    val callPolice: Boolean = Random.nextInt(10) < 3,
+    val suspect: String = ""
 )
