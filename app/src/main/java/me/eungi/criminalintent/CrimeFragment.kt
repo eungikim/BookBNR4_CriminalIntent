@@ -148,6 +148,7 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks, TimePickerFragmen
             val packageManager: PackageManager = requireActivity().packageManager
             val resolvedActivity: ResolveInfo? = packageManager.resolveActivity(pickContactIntent, PackageManager.MATCH_DEFAULT_ONLY)
             if (resolvedActivity == null) {
+                Log.d(TAG, "Disable suspectButton, can't found ACTION_PICK resolve activity")
                 isEnabled = false
             }
         }
@@ -157,8 +158,8 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks, TimePickerFragmen
             val captureImage = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
             val resolvedActivity: ResolveInfo? = packageManager.resolveActivity(captureImage, PackageManager.MATCH_DEFAULT_ONLY)
             if (resolvedActivity == null) {
-                Log.d(TAG, "onStart: photoButton can't found CAPTURE app")
-//                isEnabled = false
+                Log.d(TAG, "Disable photoButton, can't found ACTION_IMAGE_CAPTURE resolve activity")
+                isEnabled = false
             }
 
             setOnClickListener {
@@ -175,6 +176,11 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks, TimePickerFragmen
     override fun onStop() {
         super.onStop()
         crimeDetailViewModel.saveCrime(crime)
+    }
+
+    override fun onDetach() {
+        super.onDetach()
+        requireActivity().revokeUriPermission(photoUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -200,6 +206,10 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks, TimePickerFragmen
                     suspectButton.text = suspect
                 }
             }
+            requestCode == REQUEST_PHOTO -> {
+                requireActivity().revokeUriPermission(photoUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                updatePhotoView()
+            }
         }
     }
 
@@ -216,6 +226,16 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks, TimePickerFragmen
         }
         if (crime.suspect.isNotEmpty()) {
             suspectButton.text = crime.suspect
+        }
+        updatePhotoView()
+    }
+
+    private fun updatePhotoView() {
+        if (photoFile.exists()) {
+            val bitmap = getScaledBitmap(photoFile.path, requireActivity())
+            photoView.setImageBitmap(bitmap)
+        } else {
+            photoView.setImageDrawable(null)
         }
     }
 
@@ -273,3 +293,9 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks, TimePickerFragmen
         updateUI()
     }
 }
+
+/*
+설치된 패키지를 확인하는 resolve activity 의 경우 null 이 나오는 경우가 있음
+https://developer.android.com/training/package-visibility/declaring
+https://forums.bignerdranch.com/t/resolveactivity-return-null-but-startactivity-works-if-not-checking/18143/2
+ */
