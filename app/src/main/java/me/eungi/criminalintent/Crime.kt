@@ -12,7 +12,8 @@ data class Crime(
     var date: Date = Date(),
     var isSolved: Boolean = false,
     val callPolice: Boolean = Random.nextInt(10) < 3,
-    var suspect: String = ""
+    var suspect: String = "",
+    var phone: String = "",
 ) {
     val photoFileName
         get() = "IMG_$id.jpg"
