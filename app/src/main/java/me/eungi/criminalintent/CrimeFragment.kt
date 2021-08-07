@@ -1,5 +1,6 @@
 package me.eungi.criminalintent
 
+import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -16,10 +17,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import com.google.android.material.snackbar.Snackbar
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -46,12 +50,34 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks, TimePickerFragmen
     private lateinit var timeButton: Button
     private lateinit var solvedCheckBox: CheckBox
     private lateinit var reportButton: Button
+    private lateinit var callButton: Button
     private lateinit var suspectButton: Button
     private lateinit var photoButton: ImageButton
     private lateinit var photoView: ImageView
     private val crimeDetailViewModel: CrimeDetailViewModel by lazy {
         ViewModelProvider(this).get(CrimeDetailViewModel::class.java)
     }
+    // Register the permissions callback, which handles the user's response to the
+    // system permissions dialog. Save the return value, an instance of
+    // ActivityResultLauncher. You can use either a val, as shown in this snippet,
+    // or a lateinit var in your onAttach() or onCreate() method.
+    val requestPermissionLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted: Boolean ->
+            if (isGranted) {
+                // Permission is granted. Continue the action or workflow in your
+                // app.
+                suspectButton.callOnClick()
+            } else {
+                // Explain to the user that the feature is unavailable because the
+                // features requires a permission that the user has denied. At the
+                // same time, respect the user's decision. Don't link to system
+                // settings in an effort to convince the user to change their
+                // decision.
+                Snackbar.make(suspectButton.rootView, "asdfas", Snackbar.LENGTH_SHORT).show()
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,6 +99,7 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks, TimePickerFragmen
         timeButton = view.findViewById(R.id.crime_time) as Button
         solvedCheckBox = view.findViewById(R.id.crime_solved) as CheckBox
         reportButton = view.findViewById(R.id.crime_report) as Button
+        callButton = view.findViewById(R.id.crime_call) as Button
         suspectButton = view.findViewById(R.id.crime_suspect) as Button
         photoButton = view.findViewById(R.id.crime_camera) as ImageButton
         photoView = view.findViewById(R.id.crime_photo) as ImageView
@@ -139,10 +166,20 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks, TimePickerFragmen
             }
         }
 
+        callButton.setOnClickListener {
+            val callIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${crime.phone}"))
+            startActivity(callIntent)
+        }
+
         suspectButton.apply {
             val pickContactIntent = Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI)
             setOnClickListener {
-                startActivityForResult(pickContactIntent, REQUEST_CONTACT)
+                if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_CONTACTS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                    requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
+                } else {
+                    startActivityForResult(pickContactIntent, REQUEST_CONTACT)
+                }
             }
 
             val packageManager: PackageManager = requireActivity().packageManager
@@ -189,21 +226,50 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks, TimePickerFragmen
             requestCode == REQUEST_CONTACT && data != null -> {
                 val contactUri: Uri = data.data ?: return
                 // 쿼리에서 값으로 반환할 필드를 지정한다
-                val queryFields = arrayOf(ContactsContract.Contacts.DISPLAY_NAME)
+                val queryFields = arrayOf(ContactsContract.Contacts._ID)
+                Log.d(TAG, "queryFields ${queryFields.joinToString(",")}")
                 // 쿼리를 수행한다
                 val cursor = requireActivity().contentResolver.query(contactUri, queryFields, null, null, null)
                 cursor?.use {
                     // 쿼리 결과 데이터가 있는지 확인한다
-                    if (it.count == 0) {
+                    if (it.count == 0 || it.columnCount == 0) {
+                        Log.d(TAG, "Row or column cnt 0")
                         return
                     }
                     // 첫 번째 데이터 행의 첫 번째 열의 값을 가져온다
-                    // 이 값이 용의자의 이름이다
+                    // 이 값이 Contacts._ID
                     it.moveToFirst()
-                    val suspect = it.getString(0)
-                    crime.suspect = suspect
-                    crimeDetailViewModel.saveCrime(crime)
-                    suspectButton.text = suspect
+                    val id = it.getString(0)
+                    Log.d(TAG, "ID $id")
+                    val cursor2 = requireActivity().contentResolver.query(
+                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        null,
+                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = " + id,
+                        null,
+                        null
+                    )
+                    cursor2?.use {
+                        // 쿼리 결과 데이터가 있는지 확인한다
+                        if (it.count == 0 || it.columnCount == 0) {
+                            Log.d(TAG, "Row or column cnt 0")
+                            return
+                        }
+                        it.moveToFirst()
+                        val displayName = it.getString(it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME))
+                        val hasPhoneNumber = it.getInt(it.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))
+                        val phoneNumber = it.getString(it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                        Log.d(TAG, "$displayName, $hasPhoneNumber, $phoneNumber")
+
+                        crime.suspect = displayName
+                        if (hasPhoneNumber == 1) {
+                            crime.phone = phoneNumber
+                            callButton.isEnabled = true
+                        }
+                        crimeDetailViewModel.saveCrime(crime)
+                        suspectButton.text = displayName
+                    }
+
+
                 }
             }
             requestCode == REQUEST_PHOTO -> {
@@ -226,6 +292,9 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks, TimePickerFragmen
         }
         if (crime.suspect.isNotEmpty()) {
             suspectButton.text = crime.suspect
+        }
+        if (crime.phone.isNotEmpty()) {
+            callButton.isEnabled = true
         }
         updatePhotoView()
     }
