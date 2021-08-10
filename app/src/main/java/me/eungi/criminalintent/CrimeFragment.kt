@@ -32,6 +32,7 @@ private const val TAG = "CrimeFragment"
 private const val ARG_CRIME_ID = "crime_id"
 private const val DIALOG_DATE = "DialogDate"
 private const val DIALOG_TIME = "DialogTime"
+private const val DIALOG_PICTURE = "DialogPicture"
 private const val REQUEST_DATE = 0
 private const val REQUEST_TIME = 1
 private const val REQUEST_CONTACT = 2
@@ -186,7 +187,7 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks, TimePickerFragmen
             val resolvedActivity: ResolveInfo? = packageManager.resolveActivity(pickContactIntent, PackageManager.MATCH_DEFAULT_ONLY)
             if (resolvedActivity == null) {
                 Log.d(TAG, "Disable suspectButton, can't found ACTION_PICK resolve activity")
-                isEnabled = false
+//                isEnabled = false
             }
         }
 
@@ -206,6 +207,14 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks, TimePickerFragmen
                     requireActivity().grantUriPermission(cameraActivity.activityInfo.packageName, photoUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
                 }
                 startActivityForResult(captureImage, REQUEST_PHOTO)
+            }
+        }
+
+        photoView.setOnClickListener {
+            if (photoFile.exists()) {
+                CrimePictureFragment.newInstance(photoFile.path).apply {
+                    show(this@CrimeFragment.parentFragmentManager, DIALOG_PICTURE)
+                }
             }
         }
     }

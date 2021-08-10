@@ -23,5 +23,6 @@
     <string name="crime_photo_button_description">범죄 현장 사진 찍기</string>
     <string name="crime_photo_no_image_description">범죄 현장 사진 없음</string>
     <string name="crime_photo_image_description">범죄 현장 사진 있음</string>
+    <string name="crime_photo_big_image_description">확대된 범죄 현장 사진</string>
 
 </resources>
