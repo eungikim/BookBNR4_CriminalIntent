@@ -13,7 +13,7 @@
         android:layout_marginTop="4dp"
         android:text="@string/item_call_police"
         android:textSize="10sp"
-        android:textColor="@color/teal_700"
+        android:textColor="@color/teal_500"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         />
