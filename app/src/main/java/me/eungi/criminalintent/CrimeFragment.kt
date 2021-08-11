@@ -38,8 +38,6 @@ private const val REQUEST_DATE = 0
 private const val REQUEST_TIME = 1
 private const val REQUEST_CONTACT = 2
 private const val REQUEST_PHOTO = 3
-private const val DATE_FORMAT = "yyyy-MM-dd"
-private const val TIME_FORMAT = "HH:mm"
 private const val DATE_FORMAT_REPORT = "yyyy년 M월 d일 H시 m분, E요일"
 
 class CrimeFragment: Fragment(), DatePickerFragment.Callbacks, TimePickerFragment.Callbacks {
@@ -303,8 +301,8 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks, TimePickerFragmen
 
 
     private fun updateUI() {
-        val dateFormatter =  SimpleDateFormat(DATE_FORMAT, Locale.KOREA)
-        val timeFormatter =  SimpleDateFormat(TIME_FORMAT, Locale.KOREA)
+        val dateFormatter =  SimpleDateFormat(Constants.dateFormat, Locale.KOREA)
+        val timeFormatter =  SimpleDateFormat(Constants.timeFormat, Locale.KOREA)
         titleField.setText(crime.title)
         dateButton.text = dateFormatter.format(crime.date)
         timeButton.text = timeFormatter.format(crime.date)

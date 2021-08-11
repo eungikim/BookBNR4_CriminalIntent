@@ -18,6 +18,10 @@
     <string name="send_report">Enviar el informe del crimen a través de</string>
     <string name="crime_title_lable">Título</string>
 
+    <string name="date_format">dd de MM de yyyy</string>
+    <string name="time_format">A las HH:mm</string>
+    <string name="date_time_format">dd-MM-yyyy HH:mm</string>
+
     <!-- Content description -->
     <string name="crime_photo_button_description">Tomar foto de la escena del crimen</string>
     <string name="crime_photo_no_image_description">Foto de la escena del crimen (no establecida)</string>

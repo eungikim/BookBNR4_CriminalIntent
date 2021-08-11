@@ -45,6 +45,7 @@ class CrimeListFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
+
     }
 
     override fun onCreateView(
@@ -102,6 +103,7 @@ class CrimeListFragment : Fragment() {
         } else {
             crimeRecyclerView.visibility = View.INVISIBLE
             emptyTextView.visibility = View.VISIBLE
+            // TODO: crimeRecyclerView.contentDescription
         }
     }
 
@@ -110,7 +112,7 @@ class CrimeListFragment : Fragment() {
         private val titleTextView: TextView = itemView.findViewById(R.id.crime_title)
         private val dateTextView: TextView = itemView.findViewById(R.id.crime_date)
         private val solvedImageView: ImageView = itemView.findViewById(R.id.crime_solved)
-        private val formatter =  SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.KOREA)
+        private val formatter =  SimpleDateFormat(Constants.dateTimeFormat, Locale.KOREA)
 
         init {
             itemView.setOnClickListener(this)

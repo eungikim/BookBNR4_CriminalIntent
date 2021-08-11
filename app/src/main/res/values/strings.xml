@@ -19,6 +19,10 @@
     <string name="crime_report_subject">CriminalIntent 범죄 보고서</string>
     <string name="send_report">범죄 보고서 전송</string>
 
+    <string name="date_format">yyyy년 MM월 dd일</string>
+    <string name="time_format">HH시 mm분</string>
+    <string name="date_time_format">yyyy-MM-dd HH:mm</string>
+
     <!-- Content description -->
     <string name="crime_photo_button_description">범죄 현장 사진 찍기</string>
     <string name="crime_photo_no_image_description">범죄 현장 사진 없음</string>
