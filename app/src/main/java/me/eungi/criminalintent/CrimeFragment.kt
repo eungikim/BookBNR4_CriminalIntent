@@ -16,6 +16,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -104,8 +105,14 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks, TimePickerFragmen
         suspectButton = view.findViewById(R.id.crime_suspect) as Button
         photoButton = view.findViewById(R.id.crime_camera) as ImageButton
         photoView = view.findViewById(R.id.crime_photo) as ImageView
-
-
+        photoView.viewTreeObserver.addOnGlobalLayoutListener(object :
+            ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                photoView.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                if (photoView.contentDescription == getString(R.string.crime_photo_no_image_description))
+                    updatePhotoView()
+            }
+        })
         return view
     }
 
@@ -121,6 +128,7 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks, TimePickerFragmen
                     photoFile
                 )
                 updateUI()
+                updatePhotoView()
             }
         })
     }
@@ -305,12 +313,11 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks, TimePickerFragmen
         if (crime.phone.isNotEmpty()) {
             callButton.isEnabled = true
         }
-        updatePhotoView()
     }
 
     private fun updatePhotoView() {
-        if (photoFile.exists()) {
-            val bitmap = getScaledBitmap(photoFile.path, requireActivity())
+        if (photoFile.exists() && photoView.height != 0) {
+            val bitmap = getScaledBitmap(photoFile.path, photoView.height, photoView.width)
             photoView.setImageBitmap(bitmap)
             photoView.contentDescription = getString(R.string.crime_photo_image_description)
         } else {
