@@ -59,6 +59,10 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks, TimePickerFragmen
     private val crimeDetailViewModel: CrimeDetailViewModel by lazy {
         ViewModelProvider(this).get(CrimeDetailViewModel::class.java)
     }
+
+    var photoViewLayoutInit = false
+    var crimeDataInit = false
+
     // Register the permissions callback, which handles the user's response to the
     // system permissions dialog. Save the return value, an instance of
     // ActivityResultLauncher. You can use either a val, as shown in this snippet,
@@ -109,8 +113,8 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks, TimePickerFragmen
             ViewTreeObserver.OnGlobalLayoutListener {
             override fun onGlobalLayout() {
                 photoView.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                if (photoView.contentDescription == getString(R.string.crime_photo_no_image_description))
-                    updatePhotoView()
+                photoViewLayoutInit = true
+                if (crimeDataInit) updatePhotoView()
             }
         })
         return view
@@ -120,6 +124,7 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks, TimePickerFragmen
         super.onViewCreated(view, savedInstanceState)
         crimeDetailViewModel.crimeLiveData.observe(viewLifecycleOwner, Observer { crime ->
             crime?.let {
+                crimeDataInit = true
                 this.crime = crime
                 photoFile = crimeDetailViewModel.getPhotoFile(crime)
                 photoUri = FileProvider.getUriForFile(
@@ -316,7 +321,7 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks, TimePickerFragmen
     }
 
     private fun updatePhotoView() {
-        if (photoFile.exists() && photoView.height != 0) {
+        if (crimeDataInit && photoViewLayoutInit && photoFile.exists()) {
             val bitmap = getScaledBitmap(photoFile.path, photoView.height, photoView.width)
             photoView.setImageBitmap(bitmap)
             photoView.contentDescription = getString(R.string.crime_photo_image_description)
